@@ -1,0 +1,39 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Compile
+        run: |
+          mkdir out
+          javac -d out src/*.java
+
+      - name: Create JAR
+        run: |
+          mkdir dist
+          jar --create --file dist/CalculatorApp.jar --main-class App -C out .
+
+      - name: Package EXE
+        run: |
+          mkdir installer
+          jpackage --type exe --name "CalculatorApp" --input dist --main-jar CalculatorApp.jar --main-class App --dest installer --win-menu --win-shortcut
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CalculatorApp-exe
+          path: installer/*
